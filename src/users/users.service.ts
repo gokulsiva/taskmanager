@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { User } from 'src/interfaces/user.interface';
+import { InjectRepository } from '@nestjs/typeorm';
+import { CreateUserDto } from 'src/dto/create.user.dto';
+import { User } from './user.entity';
+import { UserRepository } from './user.repository';
 
 @Injectable()
 export class UsersService {
 
+    /*
     private readonly users: User[] = [
         {
             uid: 1,
@@ -26,26 +30,44 @@ export class UsersService {
             password: 'password'
         },
     ];
+    */
 
-    getUsers() {
-        return this.users;
+    constructor(
+        @InjectRepository(UserRepository)
+        private readonly userRepository: UserRepository
+        ) {}
+
+    async getUsers() {
+        const users = await this.userRepository.find();
+        return users;
     }
 
-    getUser(uid: number) {
-        return this.users.filter(user => user.uid === uid);
-    }
-
-    create(user: User) {
-        this.users.push(user);
+    async getUser(uid: number) {
+        const user = await this.userRepository.findOne({uid});
         return user;
     }
 
-    delete(uid: number) {
-        let idx = this.users.findIndex(user => user.uid === uid);
-        if(idx != -1) {
-            return this.users.splice(idx, 1);
-        }
-        return null;
+    async getUserWithTasks(uid: number) {
+        const user = await this.userRepository.findOne({
+            where: {
+                uid
+            },
+            relations: ['tasks']
+        });
+        return user;
+    }
+
+    async create(user: CreateUserDto) {
+        const userInstance = new User();
+        userInstance.email = user.email;
+        userInstance.password = user.password;
+        userInstance.tasks = [];
+        return await this.userRepository.save(userInstance);
+    }
+
+    async delete(uid: number) {
+        await this.userRepository.delete({uid});
+        return;
     }
 
 }

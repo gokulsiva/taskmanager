@@ -16,7 +16,7 @@ export class UsersController {
 
     @Get('/:id')
     getUserDetails(@Param('id', ParseIntPipe) uid: number) {
-        return this.userService.getUser(uid);
+        return this.userService.getUserWithTasks(uid);
     }
 
     @Post('/create')

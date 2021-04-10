@@ -3,15 +3,16 @@ import { TaskStatus } from "src/enum/task.status.enum"
 
 export class CreateTaskDto {
 
-    @ApiProperty()
-    id: number
-
-    @ApiProperty()
+    @ApiProperty({
+        required: false
+    })
     uid?: number
 
     @ApiProperty()
     description: string
 
-    @ApiProperty()
+    @ApiProperty({
+        enum: TaskStatus
+    })
     status: TaskStatus
 }
