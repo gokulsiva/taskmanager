@@ -47,6 +47,16 @@ export class UsersService {
         return user;
     }
 
+    async getUserByEmailAndPassword(email: string, password: string) {
+        const user = await this.userRepository.findOne({
+            where: {
+                email,
+                password
+            }
+        });
+        return user;
+    }
+
     async getUserWithTasks(uid: number) {
         const user = await this.userRepository.findOne({
             where: {

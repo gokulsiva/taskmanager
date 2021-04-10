@@ -9,6 +9,7 @@ async function bootstrap() {
     .setTitle('Sugarbox')
     .setDescription('Below API\'s are used to manage users and tasks')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('swagger', app, document);
