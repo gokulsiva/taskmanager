@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto } from 'src/dto/create.user.dto';
 import { User } from './user.entity';
@@ -44,6 +44,9 @@ export class UsersService {
 
     async getUser(uid: number) {
         const user = await this.userRepository.findOne({uid});
+        if(!user) {
+            throw new NotFoundException('User not found');
+        }
         return user;
     }
 
@@ -54,6 +57,9 @@ export class UsersService {
                 password
             }
         });
+        if(!user) {
+            throw new NotFoundException('User not found');
+        }
         return user;
     }
 
@@ -64,6 +70,9 @@ export class UsersService {
             },
             relations: ['tasks']
         });
+        if(!user) {
+            throw new NotFoundException('User not found');
+        }
         return user;
     }
 
@@ -72,7 +81,10 @@ export class UsersService {
         userInstance.email = user.email;
         userInstance.password = user.password;
         userInstance.tasks = [];
-        return await this.userRepository.save(userInstance);
+        return await this.userRepository.save(userInstance).catch(ex => {
+            // log exception
+            throw new ConflictException('User already exists')
+        });
     }
 
     async delete(uid: number) {

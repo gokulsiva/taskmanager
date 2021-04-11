@@ -12,6 +12,10 @@ export class AppController {
     private readonly authService: AuthService
     ) {}
 
+    getHello() {
+      return 'Hello World!';
+    }
+
     @ApiOperation({
       summary: 'Login with email and password',
       description: 'Login into application with email and password for assessing further api\'s'

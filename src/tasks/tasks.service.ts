@@ -1,8 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateTaskDto } from 'src/dto/create.task.dto';
-import { UsersService } from 'src/users/users.service';
-import { Task } from './task.entity';
 import { TaskRepository } from './task.repository';
 
 @Injectable()
@@ -33,8 +31,7 @@ export class TasksService {
 
     constructor(
         @InjectRepository(TaskRepository)
-        private readonly taskRepository: TaskRepository,
-        private readonly userService: UsersService
+        private readonly taskRepository: TaskRepository
     ) {}
 
     async getTasks() {
@@ -42,23 +39,28 @@ export class TasksService {
     }
 
     async getTask(id: number) {
-        const task = await this.taskRepository.findOne({id});
-        return task;
+        return await this.taskRepository.findOneOrFail({id}).catch(ex => {
+            // log error
+            throw new NotFoundException('Task not found');
+        });
     }
 
     async create(taskDto: CreateTaskDto) {
-        const user = await this.userService.getUser(taskDto.uid);
-        const task = new Task();
-        task.description = taskDto.description;
-        task.status = taskDto.status;
-        if(user) {
-            task.user = user;
-        }
-        return await this.taskRepository.save(task);
+        const qBuilder = this.taskRepository.createQueryBuilder();
+        const result = await qBuilder.insert()
+        .values({
+            description: taskDto.description,
+            status: taskDto.status,
+            user: () => '(select uid from user where uid=:uid)'
+        })
+        .setParameter('uid', taskDto.uid)
+        .execute().catch(ex => { throw new InternalServerErrorException('Issue adding task') });
+        return await this.getTask(result.identifiers[0].id);
     }
 
     async delete(id: number) {
-        return await this.taskRepository.delete({id});
+        await this.taskRepository.delete({id});
+        return;
     }
 
 }
